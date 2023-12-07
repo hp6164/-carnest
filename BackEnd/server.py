@@ -16,7 +16,6 @@ import subprocess
 
 subprocess.Popen(["/Users/majd/PycharmProjects/CarNest/BackEnd/start_mongodb.sh"])
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -35,6 +34,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Max upload size, e.g., 16MB
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -55,7 +55,7 @@ def signup():
         return jsonify({'error': 'User already exists'}), 409
 
     hashed_password = generate_password_hash(data['password'])
-    mongo.db.users.insert_one({'email': data['email'], 'password': hashed_password})
+    mongo.db.users.insert_one({'email': data['email'], 'is_admin': False, 'password': hashed_password})
     return jsonify({'message': 'User created successfully'}), 201
 
 
@@ -71,7 +71,8 @@ def signin():
 
     user = mongo.db.users.find_one({'email': data['email']})
     if user and check_password_hash(user['password'], data['password']):
-        return jsonify({'message': 'Logged in successfully'}), 200
+        user_role = 'admin' if user.get('is_admin', False) else 'user'
+        return jsonify({'message': 'Logged in successfully', 'role': user_role}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
@@ -80,41 +81,43 @@ def signin():
 @app.route('/add_listing', methods=['POST'])
 def add_listing():
     # Check for file part in the request
-    if 'picture' not in request.files:
-        return jsonify({'error': 'No picture part in the request'}), 400
+    files = request.files.getlist('pictures')  # Retrieve multiple files
 
-    file = request.files['picture']
-
-    if file.filename == '':
+    if not files or all(file.filename == '' for file in files):
         return jsonify({'error': 'No selected file'}), 400
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
+    filenames = []
+    for file in files:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            filenames.append(filename)
+        else:
+            return jsonify({'error': 'Invalid file type or no file uploaded'}), 400
 
-        # Handle other form data
-        make = request.form.get('make')
-        model = request.form.get('model')
-        year = request.form.get('year')
-        price = request.form.get('price')
+    # Handle other form data
+    make = request.form.get('make')
+    model = request.form.get('model')
+    year = request.form.get('year')
+    price = request.form.get('price')
 
-        new_listing = {
-            'make': make,
-            'model': model,
-            'year': year,
-            'price': price,
-            'picture': filename
-        }
+    new_listing = {
+        'make': make,
+        'model': model,
+        'year': year,
+        'price': price,
+        'pictures': filenames  # Store filenames as a list
+    }
 
-        mongo.db.listings.insert_one(new_listing)
-        return jsonify({'message': 'Listing added successfully'}), 201
-    else:
-        return jsonify({'error': 'Invalid file type or no file uploaded'}), 400
+    mongo.db.listings.insert_one(new_listing)
+    return jsonify({'message': 'Listing added successfully'}), 201
+
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 # Route to get listings
 @app.route('/get_listings', methods=['GET'])
@@ -122,9 +125,45 @@ def get_listings():
     listings = list(mongo.db.listings.find())
     return dumps(listings), 200
 
+
+from bson.objectid import ObjectId
+
+
+@app.route('/delete_listing/<listing_id>', methods=['DELETE'])
+def delete_listing(listing_id):
+    def is_user_admin(email):
+        user = mongo.db.users.find_one({'email': email})
+        return user.get('is_admin', False)
+
+    # This should be replaced with a secure way to identify the user (e.g., token)
+    user_email = request.args.get('email')
+
+    if not is_user_admin(user_email):
+        return jsonify({'error': 'Unauthorized access'}), 401
+
+    # Find the listing to get the picture filenames
+    listing = mongo.db.listings.find_one({'_id': ObjectId(listing_id)})
+    if not listing:
+        return jsonify({'error': 'Listing not found'}), 404
+
+    # Delete pictures associated with the listing
+    for picture in listing.get('pictures', []):
+        picture_path = os.path.join(app.config['UPLOAD_FOLDER'], picture)
+        if os.path.exists(picture_path):
+            os.remove(picture_path)
+
+    # Delete the listing from the database
+    result = mongo.db.listings.delete_one({'_id': ObjectId(listing_id)})
+    if result.deleted_count:
+        return jsonify({'message': 'Listing and associated pictures deleted successfully'}), 200
+    else:
+        return jsonify({'error': 'Error deleting listing'}), 500
+
+
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     subprocess.call(["/Users/majd/PycharmProjects/CarNest/BackEnd/stop_mongodb.sh"])
+
 
 # Run the Flask app
 if __name__ == '__main__':
