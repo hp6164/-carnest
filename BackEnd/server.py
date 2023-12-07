@@ -6,11 +6,16 @@ from werkzeug.utils import secure_filename
 import os
 from flask import send_from_directory
 from bson.json_util import dumps
+import subprocess
+
 # import json
 # from functools import wraps
 # import pandas as pd
 # import requests
 # import psycopg2
+
+subprocess.Popen(["/Users/majd/PycharmProjects/CarNest/BackEnd/start_mongodb.sh"])
+
 
 app = Flask(__name__)
 CORS(app)
@@ -117,6 +122,9 @@ def get_listings():
     listings = list(mongo.db.listings.find())
     return dumps(listings), 200
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    subprocess.call(["/Users/majd/PycharmProjects/CarNest/BackEnd/stop_mongodb.sh"])
 
 # Run the Flask app
 if __name__ == '__main__':
