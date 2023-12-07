@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+    <h2>CarNest</h2>
+    <p>User Account</p>
+
+    <!-- Form to Add a Listing -->
+    <h3>Add a Car Listing</h3>
+    <form id="addListingForm" onsubmit="addListing(event)">
+        <input type="text" name="make" placeholder="Make" required>
+        <input type="text" name="model" placeholder="Model" required>
+        <input type="number" name="year" placeholder="Year" required>
+        <input type="text" name="price" placeholder="Price" required>
+        <input type="file" name="picture" accept="image/*">
+        <button type="submit">Add Listing</button>
+    </form>
+
+    <!-- Section to Display Listings -->
+    <h3>Your Listings</h3>
+    <div id="listings"></div>
+
+    <button onclick="signOut()">Sign Out</button>
+</div>
+
+<script>
+    function addListing(event) {
+        event.preventDefault();
+        const form = document.getElementById('addListingForm');
+        const formData = new FormData(form);
+
+        fetch('http://127.0.0.1:5000/add_listing', {
+            method: 'POST',
+            body: formData  // formData will be sent as multipart/form-data
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings(); // Reload listings to show the new one
+                form.reset(); // Reset the form fields after successful addition
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function loadListings() {
+        fetch('http://127.0.0.1:5000/get_listings')
+            .then(response => response.json())
+            .then(listings => {
+                const listingsContainer = document.getElementById('listings');
+                listingsContainer.innerHTML = '';
+                listings.forEach(listing => {
+                    const listingElement = document.createElement('div');
+                    listingElement.innerHTML = `
+                    <p>Make: ${listing.make}</p>
+                    <p>Model: ${listing.model}</p>
+                    <p>Year: ${listing.year}</p>
+                    <p>Price: ${listing.price}</p>
+                    <img src="${listing.picture}" alt="Car Image">
+                `;
+                    listingsContainer.appendChild(listingElement);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function signOut() {
+        // Clear user data from local storage or session storage
+        localStorage.removeItem('username'); // Adjust based on how you store the username or session data
+
+        // Redirect to the sign-in page
+        window.location.href = 'signin.html'; // Adjust the URL based on your sign-in page's location
+    }
+    // Load listings on page load
+    window.onload = loadListings;
+</script>
+</body>
+</html>
