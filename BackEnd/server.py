@@ -124,8 +124,6 @@ def uploaded_file(filename):
 def get_listings():
     listings = list(mongo.db.listings.find())
     return dumps(listings), 200
-
-
 from bson.objectid import ObjectId
 
 
@@ -133,9 +131,12 @@ from bson.objectid import ObjectId
 def delete_listing(listing_id):
     def is_user_admin(email):
         user = mongo.db.users.find_one({'email': email})
-        return user.get('is_admin', False)
+        if user:
+            return user.get('is_admin', False)
+        else:
+            return False
 
-    # This should be replaced with a secure way to identify the user (e.g., token)
+            # This should be replaced with a secure way to identify the user (e.g., token)
     user_email = request.args.get('email')
 
     if not is_user_admin(user_email):

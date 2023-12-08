@@ -38,22 +38,21 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Check user role
-        const userRole = localStorage.getItem('userRole');
-        const accountTypeElement = document.getElementById('accountType');
+    const userRole = localStorage.getItem('userRole');
+    const accountTypeElement = document.getElementById('accountType');
+    const addListingForm = document.getElementById('addListingForm');
 
-        if (userRole === 'admin') {
-            // Show add listing form for admins
-            document.getElementById('addListingForm').style.display = 'block';
-            accountTypeElement.textContent = 'Admin Account';
-        } else {
-            // Hide add listing form for regular users
-            document.getElementById('addListingForm').style.display = 'none';
-            accountTypeElement.textContent = 'User Account';
-        }
+    if (userRole === 'admin') {
+        addListingForm.style.display = 'block';
+        accountTypeElement.textContent = 'Admin Account';
+    } else {
+        addListingForm.style.display = 'none';
+        accountTypeElement.textContent = 'User Account';
+    }
 
-        loadListings(); // Load listings on page load
-    });
+    loadListings();
+});
+
 
     function addListing(event) {
         event.preventDefault();
@@ -149,9 +148,12 @@
     }
 
     function signOut() {
-        localStorage.removeItem('username');
-        window.location.href = 'sign_in.html';
-    }
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail'); // If you're storing this as well
+    localStorage.removeItem('username');
+    window.location.href = 'sign_in.html';
+}
+
 
     window.onload = loadListings;
 </script>

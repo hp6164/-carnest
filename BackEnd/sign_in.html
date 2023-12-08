@@ -33,7 +33,8 @@
             .then(data => {
                 if (data.message) {
                     localStorage.setItem('userRole', data.role); // Save user role
-                    window.location.href = 'user_view.html'; // Redirect to user account page
+                    localStorage.setItem('userEmail', email);   // Save user email
+                    window.location.href = 'user_view.html';    // Redirect to user account page
                 } else {
                     alert(data.error);
                 }
