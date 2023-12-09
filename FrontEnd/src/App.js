@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import CreateAccount from "./CreateAccount";
 import Login from "./Login";
 import LaunchPage from "./LaunchPage";
+import Dashboard from "./Dashboard";
 
 export default function App(){
 
@@ -15,7 +16,7 @@ export default function App(){
         {account === false && loginprocess === false && createaccountprocess === false && <LaunchPage setcreateaccountprocess={setcreateaccountprocess} setloginprocess={setloginprocess}/>}
         {account === false && loginprocess === false && createaccountprocess === true && <CreateAccount setcreateaccountprocess={setcreateaccountprocess} setaccount={setaccount} />}
         {account === false && loginprocess === true && createaccountprocess === false && <Login setloginprocess={setloginprocess} setaccount={setaccount} />}
-
+        {account === true && <Dashboard />}
         </>
       );
 }
