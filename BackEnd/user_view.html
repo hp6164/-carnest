@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+    <h2>CarNest</h2>
+    <p id="accountType">User Account</p>
+
+    <!-- Form to Add a Listing -->
+    <div id="addListingForm" style="display: none;">
+        <h3>Add a Car Listing</h3>
+        <form onsubmit="addListing(event)">
+            <input type="text" name="make" placeholder="Make" required>
+            <input type="text" name="model" placeholder="Model" required>
+            <input type="number" name="year" placeholder="Year" required>
+            <input type="text" name="price" placeholder="Price" required>
+            <input type="file" name="picture" accept="image/*" multiple>
+            <button type="submit">Add Listing</button>
+        </form>
+    </div>
+    <!-- Section to Display Listings -->
+    <h3>Current Listings</h3>
+    <div id="listings"></div>
+
+    <button onclick="signOut()">Sign Out</button>
+</div>
+
+<!-- Modal for displaying enlarged images -->
+<div id="myModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="img01">
+    <div id="caption"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const userRole = localStorage.getItem('userRole');
+    const accountTypeElement = document.getElementById('accountType');
+    const addListingForm = document.getElementById('addListingForm');
+
+    if (userRole === 'admin') {
+        addListingForm.style.display = 'block';
+        accountTypeElement.textContent = 'Admin Account';
+    } else {
+        addListingForm.style.display = 'none';
+        accountTypeElement.textContent = 'User Account';
+    }
+
+    loadListings();
+});
+
+
+    function addListing(event) {
+        event.preventDefault();
+        const form = document.getElementById('addListingForm');
+        const formData = new FormData(form);
+        const files = form.querySelector('input[type="file"]').files;
+        for (let i = 0; i < files.length; i++) {
+            formData.append('pictures', files[i]);
+        }
+
+        fetch('http://127.0.0.1:5000/add_listing', {
+            method: 'POST',
+            body: formData  // formData will be sent as multipart/form-data
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings(); // Reload listings to show the new one
+                form.reset(); // Reset the form fields after successful addition
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function loadListings() {
+        const userRole = localStorage.getItem('userRole');
+        fetch('http://127.0.0.1:5000/get_listings')
+            .then(response => response.json())
+            .then(listings => {
+                const listingsContainer = document.getElementById('listings');
+                listingsContainer.innerHTML = '';
+                listings.forEach(listing => {
+                    const listingElement = document.createElement('div');
+
+                    let picturesHtml = '';
+                    if (listing.pictures && listing.pictures.length) {
+                        listing.pictures.forEach(picture => {
+                            const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
+                            picturesHtml += `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this)">`;
+                        });
+                    }
+
+                    let deleteButtonHtml = '';
+                    if (userRole === 'admin') {
+                        deleteButtonHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
+                    }
+
+                    listingElement.innerHTML = `
+                    <p>Make: ${listing.make}</p>
+                    <p>Model: ${listing.model}</p>
+                    <p>Year: ${listing.year}</p>
+                    <p>Price: ${listing.price}</p>
+                    ${picturesHtml}
+                    ${deleteButtonHtml}
+                `;
+                    listingsContainer.appendChild(listingElement);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function deleteListing(listingId) {
+        // Assuming the user's email is also stored in local storage for simplicity
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/delete_listing/${listingId}?email=${userEmail}`, {
+            method: 'DELETE',
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings(); // Reload listings to reflect the deletion
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function expandImage(img) {
+        const modal = document.getElementById("myModal");
+        const modalImg = document.getElementById("img01");
+        const captionText = document.getElementById("caption");
+
+        modal.style.display = "block";
+        modalImg.src = img.src;
+        captionText.innerHTML = img.alt;
+
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+    }
+
+    function signOut() {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail'); // If you're storing this as well
+    localStorage.removeItem('username');
+    window.location.href = 'sign_in.html';
+}
+
+
+    window.onload = loadListings;
+</script>
+</body>
+</html>
