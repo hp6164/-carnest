@@ -237,6 +237,10 @@ def deny_listing(listing_id):
 def view_listing(listing_id):
     user_email = request.json.get('email')
 
+    # Check if user is an admin
+    if is_user_admin(user_email):
+        return jsonify({'message': 'Admin view, not counted'}), 200
+
     listing = mongo.db.listings.find_one({'_id': ObjectId(listing_id)})
     if not listing:
         return jsonify({'error': 'Listing not found'}), 404
