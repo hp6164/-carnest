@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+BackEnd/start_mongodb.sh
+BackEnd/stop_mongodb.sh
