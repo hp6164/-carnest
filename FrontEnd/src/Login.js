@@ -43,10 +43,10 @@ export default function Login({ setloginprocess, setaccount }) {
 
   return (
     <>
-      <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="flex bg-slate-900 min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+        <div className="sm:mx-auto bg-slate-900 sm:w-full sm:max-w-sm">
           <img className="mx-auto h-10 w-auto" src="" alt="Carnest" />
-          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">
             Login to your account
           </h2>
         </div>
@@ -61,7 +61,7 @@ export default function Login({ setloginprocess, setaccount }) {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium leading-6 text-gray-900"
+                className="block text-sm font-medium leading-6 text-white"
                 onChange={handleChange}
               >
                 Email address
@@ -87,7 +87,7 @@ export default function Login({ setloginprocess, setaccount }) {
                 <label
                   htmlFor="password"
                   onChange={handleChange}
-                  className="block text-sm font-medium leading-6 text-gray-900"
+                  className="block text-sm font-medium leading-6 text-white"
                 >
                   Password
                 </label>

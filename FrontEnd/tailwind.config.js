@@ -5,5 +5,10 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  theme: {
+    extend: {
+      
+    }
+  }
 }
 

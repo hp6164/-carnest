@@ -51,6 +51,54 @@ const listings = [
     imageSrc: "",
     imageAlt: "Car Picture",
   },
+  {
+    id: 7,
+    name: "Car-7",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
+  {
+    id: 8,
+    name: "Car-8",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
+  {
+    id: 9,
+    name: "Car-9",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
+  {
+    id: 10,
+    name: "Car-10",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
+  {
+    id: 11,
+    name: "Car-11",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
+  {
+    id: 12,
+    name: "Car-12",
+    href: "#",
+    price: "$",
+    imageSrc: "",
+    imageAlt: "Car Picture",
+  },
 ];
 
 export default function Listings() {
@@ -59,15 +107,52 @@ export default function Listings() {
 
   const getCar = async () => {
     setOpen(true);
+
+    function loadListings() {
+      const userRole = localStorage.getItem("userRole");
+      fetch("http://127.0.0.1:5000/get_listings")
+        .then((response) => response.json())
+        .then((listings) => {
+          const listingsContainer = document.getElementById("listings");
+          listingsContainer.innerHTML = "";
+          listings.forEach((listing) => {
+            const listingElement = document.createElement("div");
+
+            let picturesHtml = "";
+            if (listing.pictures && listing.pictures.length) {
+              listing.pictures.forEach((picture) => {
+                const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
+                picturesHtml += `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this)">`;
+              });
+            }
+
+            let deleteButtonHtml = "";
+            if (userRole === "admin") {
+              deleteButtonHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
+            }
+
+            listingElement.innerHTML = `
+                  <p>Make: ${listing.make}</p>
+                  <p>Model: ${listing.model}</p>
+                  <p>Year: ${listing.year}</p>
+                  <p>Price: ${listing.price}</p>
+                  ${picturesHtml}
+                  ${deleteButtonHtml}
+              `;
+            listingsContainer.appendChild(listingElement);
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    }
   };
 
   return (
     <>
-      <div className="bg-white">
+      <div className="bg-neutral-300">
         <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
           <h2 className="sr-only">Listings</h2>
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
             {listings.map((car) => (
               <a key={car.id} href={car.href} className="group">
                 <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7">
@@ -84,7 +169,6 @@ export default function Listings() {
                 </p>
               </a>
             ))}
-            ;
           </div>
         </div>
       </div>
