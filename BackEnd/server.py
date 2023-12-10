@@ -57,14 +57,33 @@ def signup():
         return jsonify({'error': 'Request must be JSON'}), 400
 
     data = request.get_json()
-    if 'email' not in data or 'password' not in data:
-        return jsonify({'error': 'Email and password required'}), 400
+    # Check if name, age, email and password are provided
+    required_fields = ['name', 'age', 'email', 'password']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Name, Age, Email, and Password required'}), 400
 
+    # Validate the age
+    try:
+        age = int(data['age'])
+        if age < 18:
+            return jsonify({'error': 'Age must be 18 or older'}), 400
+    except ValueError:
+        return jsonify({'error': 'Invalid age, must be a number'}), 400
+
+    # Validate user already exits
     if mongo.db.users.find_one({'email': data['email']}):
         return jsonify({'error': 'User already exists'}), 409
 
+    # Hashing password
     hashed_password = generate_password_hash(data['password'])
-    mongo.db.users.insert_one({'email': data['email'], 'is_admin': False, 'password': hashed_password})
+    # Insert in db
+    mongo.db.users.insert_one({
+        'name': data['name'],
+        'age': data['age'],
+        'email': data['email'],
+        'password': hashed_password,
+        'is_admin': False
+    })
     return jsonify({'message': 'User created successfully'}), 201
 
 
@@ -81,7 +100,8 @@ def signin():
     user = mongo.db.users.find_one({'email': data['email']})
     if user and check_password_hash(user['password'], data['password']):
         user_role = 'admin' if user.get('is_admin', False) else 'user'
-        return jsonify({'message': 'Logged in successfully', 'role': user_role}), 200
+        user_name = user.get('name', '')  # default to an empty string if name is not found
+        return jsonify({'message': 'Logged in successfully', 'role': user_role, 'name': user_name}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
@@ -163,7 +183,7 @@ def get_pending_listings():
     return dumps(pending_listings), 200
 
 
-# Route for delete listing "admins only"
+# Route for permanently deleting a listing "admins only"
 @app.route('/delete_listing/<listing_id>', methods=['DELETE'])
 def delete_listing(listing_id):
     user_email = request.args.get('email')

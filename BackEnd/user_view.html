@@ -8,6 +8,7 @@
 <body>
 <div class="form-container">
     <h2>CarNest</h2>
+    <h4 id="userName">Hello User</h4>
     <p id="accountType">User Account</p>
     <!-- Button to Toggle Add Listing Form -->
     <button id="toggleAddListingButton" onclick="toggleAddListingForm()">Add New Listing</button>
@@ -40,13 +41,17 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        const userName = localStorage.getItem('userName');
         const userRole = localStorage.getItem('userRole');
+        const userNameElement = document.getElementById('userName');
         const accountTypeElement = document.getElementById('accountType');
         const toggleAddListingButton = document.getElementById('toggleAddListingButton');
 
+        userNameElement.textContent = 'Hello ' + userName;
+        accountTypeElement.textContent = userRole === 'admin' ? 'Admin Account' : 'User Account';
+
         // Always display the toggle button, but keep the form hidden by default
         toggleAddListingButton.style.display = 'block';
-        accountTypeElement.textContent = userRole === 'admin' ? 'Admin Account' : 'User Account';
 
         loadListings();
     });
