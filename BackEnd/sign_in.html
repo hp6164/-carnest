@@ -32,8 +32,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    localStorage.setItem('userRole', data.role); // Save user role
+                    localStorage.setItem('userName', data.name); // Save user role
                     localStorage.setItem('userEmail', email);   // Save user email
+                    localStorage.setItem('userRole', data.role); // Save user role
                     window.location.href = 'user_view.html';    // Redirect to user account page
                 } else {
                     alert(data.error);
