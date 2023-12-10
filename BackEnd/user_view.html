@@ -9,7 +9,8 @@
 <div class="form-container">
     <h2>CarNest</h2>
     <p id="accountType">User Account</p>
-
+    <!-- Button to Toggle Add Listing Form -->
+    <button id="toggleAddListingButton" onclick="toggleAddListingForm()">Add New Listing</button>
     <!-- Form to Add a Listing -->
     <div id="addListingForm" style="display: none;">
         <h3>Add a Car Listing</h3>
@@ -18,6 +19,7 @@
             <input type="text" name="model" placeholder="Model" required>
             <input type="number" name="year" placeholder="Year" required>
             <input type="text" name="price" placeholder="Price" required>
+            <input type="text" name="address" placeholder="Address" required>
             <input type="file" name="picture" accept="image/*" multiple>
             <button type="submit">Add Listing</button>
         </form>
@@ -38,79 +40,162 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    const userRole = localStorage.getItem('userRole');
-    const accountTypeElement = document.getElementById('accountType');
-    const addListingForm = document.getElementById('addListingForm');
+        const userRole = localStorage.getItem('userRole');
+        const accountTypeElement = document.getElementById('accountType');
+        const toggleAddListingButton = document.getElementById('toggleAddListingButton');
 
-    if (userRole === 'admin') {
-        addListingForm.style.display = 'block';
-        accountTypeElement.textContent = 'Admin Account';
-    } else {
-        addListingForm.style.display = 'none';
-        accountTypeElement.textContent = 'User Account';
+        // Always display the toggle button, but keep the form hidden by default
+        toggleAddListingButton.style.display = 'block';
+        accountTypeElement.textContent = userRole === 'admin' ? 'Admin Account' : 'User Account';
+
+        loadListings();
+    });
+
+    // Show add listing
+    function toggleAddListingForm() {
+        const addListingForm = document.getElementById('addListingForm');
+        if (addListingForm.style.display === 'none' || addListingForm.style.display === '') {
+            addListingForm.style.display = 'block';
+        } else {
+            addListingForm.style.display = 'none';
+        }
     }
-
-    loadListings();
-});
 
 
     function addListing(event) {
         event.preventDefault();
-        const form = document.getElementById('addListingForm');
+
+        const form = document.querySelector('#addListingForm form');
         const formData = new FormData(form);
+
         const files = form.querySelector('input[type="file"]').files;
         for (let i = 0; i < files.length; i++) {
             formData.append('pictures', files[i]);
         }
 
+        const userEmail = localStorage.getItem('userEmail');
+        formData.append('email', userEmail);
+
         fetch('http://127.0.0.1:5000/add_listing', {
             method: 'POST',
-            body: formData  // formData will be sent as multipart/form-data
+            body: formData
         })
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                loadListings(); // Reload listings to show the new one
-                form.reset(); // Reset the form fields after successful addition
+                loadListings();
+                form.reset();
             })
             .catch(error => {
                 console.error('Error:', error);
             });
     }
 
-    function loadListings() {
+    async function loadListings() {
         const userRole = localStorage.getItem('userRole');
+        const userEmail = localStorage.getItem('userEmail');
+        const listingsContainer = document.getElementById('listings');
+        listingsContainer.innerHTML = '';
+
+        // Admins view
+        if (userRole === 'admin') {
+            fetch(`http://127.0.0.1:5000/get_pending_listings?email=${encodeURIComponent(userEmail)}`)
+                .then(response => response.json())
+                .then(pendingListings => {
+                    displayListings(pendingListings, userRole, listingsContainer, true);
+                })
+                .then(() => {
+                    loadGeneralListings(userRole, listingsContainer);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Users view
+        else {
+            loadGeneralListings(userRole, listingsContainer);
+        }
+    }
+
+    function loadGeneralListings(userRole, container) {
         fetch('http://127.0.0.1:5000/get_listings')
             .then(response => response.json())
             .then(listings => {
-                const listingsContainer = document.getElementById('listings');
-                listingsContainer.innerHTML = '';
-                listings.forEach(listing => {
-                    const listingElement = document.createElement('div');
+                displayListings(listings, userRole, container);
+            })
+            .catch(error => console.error('Error:', error));
+    }
 
-                    let picturesHtml = '';
-                    if (listing.pictures && listing.pictures.length) {
-                        listing.pictures.forEach(picture => {
-                            const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
-                            picturesHtml += `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this)">`;
-                        });
-                    }
+    function displayListings(listings, userRole, container, isPending = false) {
+        // If db is empty return
+        if (!Array.isArray(listings)) {
+            console.log("No listings found or listings is not an array", listings);
+            return;
+        }
+        // List all elements
+        listings.forEach(listing => {
+            const listingElement = document.createElement('div');
+            let actionButtonsHtml = '';
 
-                    let deleteButtonHtml = '';
-                    if (userRole === 'admin') {
-                        deleteButtonHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
-                    }
+            let picturesHtml = listing.pictures.map(picture => {
+                const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
+                return `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this, '${listing._id.$oid}')">`; // Added listing ID
+            }).join('');
 
-                    listingElement.innerHTML = `
-                    <p>Make: ${listing.make}</p>
-                    <p>Model: ${listing.model}</p>
-                    <p>Year: ${listing.year}</p>
-                    <p>Price: ${listing.price}</p>
-                    ${picturesHtml}
-                    ${deleteButtonHtml}
-                `;
-                    listingsContainer.appendChild(listingElement);
-                });
+            // Admin action buttons
+            if (userRole === 'admin') {
+                if (isPending) {
+                    actionButtonsHtml = `
+                <button onclick="approveListing('${listing._id.$oid}')">Approve</button>
+                <button onclick="denyListing('${listing._id.$oid}')">Deny</button>
+            `;
+                } else {
+                    actionButtonsHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
+                }
+            }
+
+            listingElement.innerHTML = `
+            <p>Make: ${listing.make}</p>
+            <p>Model: ${listing.model}</p>
+            <p>Year: ${listing.year}</p>
+            <p>Price: ${listing.price}</p>
+            <p>Address: ${listing.address}</p>
+            <p>Views: ${listing.views_count}</p>
+            ${picturesHtml}
+            ${actionButtonsHtml}
+        `;
+            container.appendChild(listingElement);
+        });
+    }
+
+    function approveListing(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/approve_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function denyListing(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/deny_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings();
             })
             .catch(error => console.error('Error:', error));
     }
@@ -129,7 +214,27 @@
             .catch(error => console.error('Error:', error));
     }
 
-    function expandImage(img) {
+    function incrementViewCount(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/view_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => console.log(data.message))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function expandImage(img, listingId) {
+        incrementViewCount(listingId);
         const modal = document.getElementById("myModal");
         const modalImg = document.getElementById("img01");
         const captionText = document.getElementById("caption");
@@ -148,14 +253,12 @@
     }
 
     function signOut() {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail'); // If you're storing this as well
-    localStorage.removeItem('username');
-    window.location.href = 'sign_in.html';
-}
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail'); // If you're storing this as well
+        localStorage.removeItem('username');
+        window.location.href = 'sign_in.html';
+    }
 
-
-    window.onload = loadListings;
 </script>
 </body>
 </html>
