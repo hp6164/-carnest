@@ -24,4 +24,3 @@ yarn-error.log*
 
 
 BackEnd/start_mongodb.sh
-BackEnd/stop_mongodb.sh
