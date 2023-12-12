@@ -5,9 +5,37 @@
 }
 
 .profileShow {
+    flex: 1;
+    padding: 20px;
+    -webkit-box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+    box-shadow: 0px 0px 15px -10px rgba(0, 0, 0, 0.75);
+}
+
+.profileTop {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+}
+
+.profileShowName {
     font-weight: 600;
 }
 
-.profileShowEmail {
+.profileShowTitle {
     font-weight: 300;
+}
+
+.profileBottom {
+    margin-top: 20px;
+}
+
+.profiltContentTitle {
+    margin-left: 10px;
+}
+
+.profileInfo {
+    display: flex;
+    align-items: center;
+    margin: 20px 0px;
+    color: #444;
 }
