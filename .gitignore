@@ -4,3 +4,4 @@ FrontEnd/.next
 /myenv
 .idea/
 BackEnd/db/diagnostic.data
+BackEnd/start_mongodb.sh
