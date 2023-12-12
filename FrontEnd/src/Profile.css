@@ -1,0 +1,13 @@
+.profileContainer {
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profileShow {
+    font-weight: 600;
+}
+
+.profileShowEmail {
+    font-weight: 300;
+}
