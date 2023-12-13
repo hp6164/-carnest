@@ -36,6 +36,9 @@ const rows = [
   ];
 
 export default function Profile() {
+
+
+
     return (
         <div className ="profile">
             <div className ="profileTitleContainer"> 
@@ -66,6 +69,7 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+            <h1>Your Listings</h1>
             <div style={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={rows}

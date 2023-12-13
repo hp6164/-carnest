@@ -1,151 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Fragment, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
-const listings = [
+const cars1 = [
   {
     id: 1,
-    name: "Car-1",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
+    make: "Car-1",
+    model: "#",
+    year: "$",
+    price: "12",
   },
-  {
-    id: 2,
-    name: "Car-2",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 3,
-    name: "Car-3",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 4,
-    name: "Car-4",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 5,
-    name: "Car-5",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 6,
-    name: "Car-6",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 7,
-    name: "Car-7",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 8,
-    name: "Car-8",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 9,
-    name: "Car-9",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 10,
-    name: "Car-10",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 11,
-    name: "Car-11",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
-  {
-    id: 12,
-    name: "Car-12",
-    href: "#",
-    price: "$",
-    imageSrc: "",
-    imageAlt: "Car Picture",
-  },
+  
 ];
+
 
 export default function Listings() {
   const [open, setOpen] = useState(false);
   const cancelButtonRef = useRef(null);
+  const [cars,setcars] = useState(cars1);
 
-  const getCar = async () => {
-    setOpen(true);
 
-    function loadListings() {
+
+
+    const getListings = async () => {
       const userRole = localStorage.getItem("userRole");
-      fetch("http://127.0.0.1:5000/get_listings")
-        .then((response) => response.json())
-        .then((listings) => {
-          const listingsContainer = document.getElementById("listings");
-          listingsContainer.innerHTML = "";
-          listings.forEach((listing) => {
-            const listingElement = document.createElement("div");
+      try
+      {
+        fetch('http://127.0.0.1:5000/get_listings')
+        .then(response => response.json())
+        .then(listings => {
 
-            let picturesHtml = "";
-            if (listing.pictures && listing.pictures.length) {
-              listing.pictures.forEach((picture) => {
-                const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
-                picturesHtml += `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this)">`;
-              });
-            }
-
-            let deleteButtonHtml = "";
-            if (userRole === "admin") {
-              deleteButtonHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
-            }
-
-            listingElement.innerHTML = `
-                  <p>Make: ${listing.make}</p>
-                  <p>Model: ${listing.model}</p>
-                  <p>Year: ${listing.year}</p>
-                  <p>Price: ${listing.price}</p>
-                  ${picturesHtml}
-                  ${deleteButtonHtml}
-              `;
-            listingsContainer.appendChild(listingElement);
-          });
+          console.log(listings)
+          setcars(listings)
         })
-        .catch((error) => console.error("Error:", error));
+        .catch(error => console.error('Error:', error));
+        
+      }catch (err) {
+        console.error(err);
+      }
     }
-  };
+    
+    useEffect(() => {
+      getListings();
+    }, []);
 
+    console.log(cars1)
   return (
     <>
       <div className="bg-neutral-300">
@@ -153,19 +52,21 @@ export default function Listings() {
           <h2 className="sr-only">Listings</h2>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-            {listings.map((car) => (
-              <a key={car.id} href={car.href} className="group">
+          {cars.map((car) => (
+              <a key={car.id}  className="group">
+                
                 <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7">
+                {/* {url = 'http://127.0.0.1:5000/uploads/'.concat(car.pictures[0])} */}
                   <img
-                    src={car.imageSrc}
-                    alt={car.imageAlt}
+                    src= {car.pictures}
+                    alt='picture'
                     className="h-full w-full object-cover object-center group-hover:opacity-75"
-                    onClick={getCar}
+                    
                   />
                 </div>
-                <h3 className="mt-4 text-sm text-gray-700">{car.name}</h3>
+                <h4 className="mt-4 text-sm text-gray-700">{car.year} {car.make} {car.model}</h4>
                 <p className="mt-1 text-lg font-medium text-gray-900">
-                  {car.price}
+                  ${car.price}
                 </p>
               </a>
             ))}

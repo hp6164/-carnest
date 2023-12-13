@@ -13,9 +13,10 @@ export default function LaunchPage({setcreateaccountprocess, setloginprocess} ) 
 
     return (
       <>
-        <div className="grid place-items-center bg-slate-900 px-100 py-80 sm:py-80 lg:px-8 lg:py-100">
+      <div className = "bg-slate-900 min-h-screen">
+        <div className="grid place-items-center bg-slate-900 px-100 py-10 sm:py-10 lg:px-8 lg:py-10">
           <div className="text-center">
-          <img src="carnest.png" />
+          <img src="http://127.0.0.1:5000/uploads/carnest.png" />
             <h1 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-5xl">Welcome to CarNest</h1>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
@@ -34,6 +35,7 @@ export default function LaunchPage({setcreateaccountprocess, setloginprocess} ) 
               </a>
             </div>
           </div>
+        </div>
         </div>
       </>
     )
