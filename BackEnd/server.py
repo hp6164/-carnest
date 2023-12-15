@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, render_template
 from flask_cors import CORS
 from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -49,6 +49,25 @@ def is_user_admin(email):
     else:
         return False
 
+@app.route('/')
+def home():
+    return render_template('welcome_page.html')
+
+@app.route('/sign-in')
+def sign_in():
+    return render_template('sign_in.html')
+
+@app.route('/sign-up')
+def sign_up():
+    return render_template('sign_up.html')
+
+@app.route('/user-view')
+def user_view():
+    return render_template('user_view.html')
+
+@app.route('/profile')
+def profile():
+    return render_template('profile.html')
 
 # Route to signup
 @app.route('/signup', methods=['POST'])
@@ -57,14 +76,33 @@ def signup():
         return jsonify({'error': 'Request must be JSON'}), 400
 
     data = request.get_json()
-    if 'email' not in data or 'password' not in data:
-        return jsonify({'error': 'Email and password required'}), 400
+    # Check if name, age, email and password are provided
+    required_fields = ['name', 'age', 'email', 'password']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Name, Age, Email, and Password required'}), 400
 
+    # Validate the age
+    try:
+        age = int(data['age'])
+        if age < 18:
+            return jsonify({'error': 'Age must be 18 or older'}), 400
+    except ValueError:
+        return jsonify({'error': 'Invalid age, must be a number'}), 400
+
+    # Validate user already exits
     if mongo.db.users.find_one({'email': data['email']}):
         return jsonify({'error': 'User already exists'}), 409
 
+    # Hashing password
     hashed_password = generate_password_hash(data['password'])
-    mongo.db.users.insert_one({'email': data['email'], 'is_admin': False, 'password': hashed_password})
+    # Insert in db
+    mongo.db.users.insert_one({
+        'name': data['name'],
+        'age': data['age'],
+        'email': data['email'],
+        'password': hashed_password,
+        'is_admin': False
+    })
     return jsonify({'message': 'User created successfully'}), 201
 
 
@@ -81,7 +119,8 @@ def signin():
     user = mongo.db.users.find_one({'email': data['email']})
     if user and check_password_hash(user['password'], data['password']):
         user_role = 'admin' if user.get('is_admin', False) else 'user'
-        return jsonify({'message': 'Logged in successfully', 'role': user_role}), 200
+        user_name = user.get('name', '')  # default to an empty string if name is not found
+        return jsonify({'message': 'Logged in successfully', 'role': user_role, 'name': user_name}), 200
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
@@ -110,6 +149,7 @@ def add_listing():
     make = request.form.get('make')
     model = request.form.get('model')
     year = request.form.get('year')
+    millage = request.form.get('millage')
     price = request.form.get('price')
     address = request.form.get('address')
 
@@ -122,6 +162,7 @@ def add_listing():
         'model': model,
         'year': year,
         'price': price,
+        'millage': millage,
         'address': address,
         'views': [],
         'view_count': 0,
@@ -163,7 +204,7 @@ def get_pending_listings():
     return dumps(pending_listings), 200
 
 
-# Route for delete listing "admins only"
+# Route for permanently deleting a listing "admins only"
 @app.route('/delete_listing/<listing_id>', methods=['DELETE'])
 def delete_listing(listing_id):
     user_email = request.args.get('email')
