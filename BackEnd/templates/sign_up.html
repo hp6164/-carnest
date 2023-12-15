@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a202c;
+            color: white;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input, button {
+            width: 80%; /* Adjust width as needed */
+            margin: 0.5em 0;
+        }
+
+        .form-container {
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2em;
+        }
+
+        input {
+            margin: 0.5em 0;
+            padding: 0.5em;
+            border-radius: 0.3em;
+            border: none;
+        }
+
+        button {
+            margin-top: 1em;
+            padding: 0.5em 1em;
+            background-color: #2b6cb0;
+            color: white;
+            border: none;
+            border-radius: 0.3em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4c51bf;
+        }
+
+        a {
+            color: #63b3ed;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Sign Up</h2>
+        <form id="signUpForm" onsubmit="signup(event)">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="number" id="age" placeholder="Age" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p>Already have an account? <a href="/sign-in">Sign in</a></p>
+    </div>
+
+    <script>
+        function signup(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            fetch('http://127.0.0.1:5000/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password, name, age }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.message) {
+                    window.location.href = '/user-view'; // Redirect to sign-in page
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

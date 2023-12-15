@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Account</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a202c;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: hidden;
+        }
+
+        /* Container for Content */
+        .form-container {
+            max-width: 90%;
+            text-align: center;
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Header Styles */
+        h2, h3, h4 {
+            margin-bottom: 15px;
+        }
+
+        /* Grid Layout for Listings */
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid layout */
+
+            gap: 20px;
+            width: 90%;
+            margin: auto;
+        }
+
+        /* Individual Listing Styles */
+        .listing {
+            background-color: #2d3748;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            text-align: center; /* Center align text and elements */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            display: flex; /* Use flexbox */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center items horizontally */
+            justify-content: center; /* Center items vertically */
+        }
+
+        .listing img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        /* Button Styles */
+        button {
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #63b3ed;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 600px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Style for the form elements */
+        #addListingForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #addListingForm form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px; /* Add some padding */
+            box-sizing: border-box;
+            max-width: 400px; /* Adjust the width as needed */
+        }
+
+        #addListingForm input,
+        #addListingForm button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .backButton {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #3182ce; /* Button color */
+            color: white; /* Text color */
+            text-decoration: none; /* Remove underline from link */
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .backButton:hover {
+            background-color: #63b3ed; /* Color on hover */
+        }
+
+        .sign-out-button {
+            background-color: red; /* Red background color */
+            color: white; /* White text color */
+            border: none; /* No border */
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sign-out-button:hover {
+            background-color: darkred; /* Darker red on hover */
+        }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>CarNest</h2>
+    <h4 id="userName">Hello User</h4>
+    <p id="accountType">User Account</p>
+    <!-- Button to Toggle Add Listing Form -->
+    <button id="toggleAddListingButton" onclick="toggleAddListingForm()">Add New Listing</button>
+
+    <!-- Form to Add a Listing -->
+    <div id="addListingForm" style="display: none;">
+        <h3>Add a Car Listing</h3>
+        <form onsubmit="addListing(event)">
+            <input type="text" name="make" placeholder="Make" required>
+            <input type="text" name="model" placeholder="Model" required>
+            <input type="number" name="year" placeholder="Year" required>
+            <input type="number" name="price" placeholder="Price" required>
+            <input type="number" name="millage" placeholder="Millage" required>
+            <input type="text" name="address" placeholder="Address" required>
+            <input type="file" name="picture" accept="image/*" multiple>
+            <button type="submit">Add Listing</button>
+        </form>
+    </div>
+
+
+</div>
+<a class="backButton" onclick="return showPopup1();">Get in contact</a>
+<!-- Section to Display Listings -->
+<h3>Current Offered Listings</h3>
+<div id="listings" class="listings-grid">
+    <!-- Dynamic Listings will be loaded here -->
+</div>
+
+<button class="sign-out-button" onclick="signOut()">Sign Out</button>
+
+<!-- Modal for displaying enlarged images -->
+<div id="myModal" class="modal">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="img01">
+    <div id="caption"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const userName = localStorage.getItem('userName');
+        const userRole = localStorage.getItem('userRole');
+        const userNameElement = document.getElementById('userName');
+        const accountTypeElement = document.getElementById('accountType');
+        const toggleAddListingButton = document.getElementById('toggleAddListingButton');
+
+        userNameElement.textContent = 'Hello ' + userName;
+        accountTypeElement.textContent = userRole === 'admin' ? 'Admin Account' : 'User Account';
+
+        // Always display the toggle button, but keep the form hidden by default
+        toggleAddListingButton.style.display = 'block';
+
+        loadListings();
+    });
+
+    // Show add listing
+    function toggleAddListingForm() {
+        const addListingForm = document.getElementById('addListingForm');
+        if (addListingForm.style.display === 'none' || addListingForm.style.display === '') {
+            addListingForm.style.display = 'block';
+        } else {
+            addListingForm.style.display = 'none';
+        }
+    }
+
+
+    function addListing(event) {
+        event.preventDefault();
+
+        const form = document.querySelector('#addListingForm form');
+        const formData = new FormData(form);
+
+        const files = form.querySelector('input[type="file"]').files;
+        for (let i = 0; i < files.length; i++) {
+            formData.append('pictures', files[i]);
+        }
+
+        const userEmail = localStorage.getItem('userEmail');
+        formData.append('email', userEmail);
+
+        fetch('http://127.0.0.1:5000/add_listing', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings();
+                form.reset();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    async function loadListings() {
+        const userRole = localStorage.getItem('userRole');
+        const userEmail = localStorage.getItem('userEmail');
+        const listingsContainer = document.getElementById('listings');
+        listingsContainer.innerHTML = '';
+
+        // Admins view
+        if (userRole === 'admin') {
+            fetch(`http://127.0.0.1:5000/get_pending_listings?email=${encodeURIComponent(userEmail)}`)
+                .then(response => response.json())
+                .then(pendingListings => {
+                    displayListings(pendingListings, userRole, listingsContainer, true);
+                })
+                .then(() => {
+                    loadGeneralListings(userRole, listingsContainer);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Users view
+        else {
+            loadGeneralListings(userRole, listingsContainer);
+        }
+    }
+
+    function loadGeneralListings(userRole, container) {
+        fetch('http://127.0.0.1:5000/get_listings')
+            .then(response => response.json())
+            .then(listings => {
+                displayListings(listings, userRole, container);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displayListings(listings, userRole, container, isPending = false) {
+        // If db is empty return
+        if (!Array.isArray(listings)) {
+            console.log("No listings found or listings is not an array", listings);
+            return;
+        }
+        // List all elements
+        listings.forEach(listing => {
+            const listingElement = document.createElement('div');
+            listingElement.classList.add('listing');
+            let actionButtonsHtml = '';
+
+            let picturesHtml = listing.pictures.map(picture => {
+                const pictureUrl = `http://127.0.0.1:5000/uploads/${picture}`;
+                return `<img src="${pictureUrl}" alt="Car Image" style="width: 200px; height: auto;" onclick="expandImage(this, '${listing._id.$oid}')">`; // Added listing ID
+            }).join('');
+
+            // Admin action buttons
+            if (userRole === 'admin') {
+                if (isPending) {
+                    actionButtonsHtml = `
+                <button onclick="approveListing('${listing._id.$oid}')">Approve</button>
+                <button onclick="denyListing('${listing._id.$oid}')">Deny</button>
+            `;
+                } else {
+                    actionButtonsHtml = `<button onclick="deleteListing('${listing._id.$oid}')">Delete Listing</button>`;
+                }
+            }
+
+            listingElement.innerHTML = `
+            ${picturesHtml}
+            <p>Make: ${listing.make}</p>
+            <p>Model: ${listing.model}</p>
+            <p>Year: ${listing.year}</p>
+            <p>Price: $${listing.price}</p>
+            <p>Millage: ${listing.millage}</p>
+            <p>Address: ${listing.address}</p>
+            <p>Views: ${listing.views_count}</p>
+            <a class="backButton" onclick="return showPopup();">Request Info</a>
+            ${actionButtonsHtml}
+        `;
+            container.appendChild(listingElement);
+        });
+    }
+    function showPopup() {
+            alert("Our rep will get in contact with you soon!");
+            return false; // Prevent default navigation behavior
+    }
+    function showPopup1() {
+            alert("Routing you to the nearest rep in your area");
+            window.location.href = '/profile';
+            return true; // Prevent default navigation behavior
+    }
+    function approveListing(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/approve_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function denyListing(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/deny_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function deleteListing(listingId) {
+        // Assuming the user's email is also stored in local storage for simplicity
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/delete_listing/${listingId}?email=${userEmail}`, {
+            method: 'DELETE',
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadListings(); // Reload listings to reflect the deletion
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function incrementViewCount(listingId) {
+        const userEmail = localStorage.getItem('userEmail');
+        fetch(`http://127.0.0.1:5000/view_listing/${listingId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({email: userEmail})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => console.log(data.message))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function expandImage(img, listingId) {
+        incrementViewCount(listingId);
+        const modal = document.getElementById("myModal");
+        const modalImg = document.getElementById("img01");
+
+        modal.style.display = "block";
+        modalImg.src = img.src;
+
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+    }
+
+    function signOut() {
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail'); // If you're storing this as well
+        localStorage.removeItem('username');
+        window.location.href = '/';
+    }
+
+</script>
+</body>
+</html>
